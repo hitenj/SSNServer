@@ -8,6 +8,7 @@ const footerQuestionRoutes = require("./routes/footerQuestionRoutes");
 const registerCampaignRoutes = require("./routes/registerCampaignRoutes");
 const bookSeatRoutes = require("./routes/bookSeatRoutes");
 const donationRoutes = require("./routes/donationRoutes.js");
+const paymentRoutes = require("./routes/payment");
 
 const app = express();
 
@@ -29,6 +30,7 @@ mongoose
     app.use("/api/registerCampaign", registerCampaignRoutes);
     app.use('/api/bookSeat', bookSeatRoutes);
     app.use("/api/donations", donationRoutes);
+    app.use("/api/payment", paymentRoutes);
 
     app.get("/", (req, res) => {
       res.send("Server is running and ready!");
