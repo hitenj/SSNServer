@@ -15,7 +15,7 @@ router.post("/create-order", async (req, res) => {
 
   try {
     const order = await razorpay.orders.create({
-      amount: amount * 100, // amount in paise
+      amount: amount, // amount in paise
       currency: "INR",
       payment_capture: 1,
     });
