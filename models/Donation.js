@@ -6,6 +6,7 @@ const donationSchema = new mongoose.Schema({
     whatsapp: {type: String, required: true},
     amount: {type: String, required: true},
     pan: {type: String},
+    purpose: {type: String, required: true},
     paymentId: {type: String},
     orderId: {type: String},
     signature: {type: String},
