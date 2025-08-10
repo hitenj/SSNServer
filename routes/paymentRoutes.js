@@ -2,6 +2,7 @@ const express = require("express");
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
 const router = express.Router();
+const Donation = require("../models/Donation");
 
 // Razorpay instance (uses live keys from .env)
 const razorpay = new Razorpay({
@@ -20,58 +21,55 @@ router.post("/create-order", async (req, res) => {
       payment_capture: 1,
     });
 
-    res.status(200).json({
-      success: true,
-      orderId: order.id,
-      amount: order.amount,
-      currency: order.currency,
-    });
-  } catch (error) {
-    console.error("Error creating Razorpay order:", error);
-    res.status(500).json({ success: false, message: "Order creation failed" });
+    res.json({ success: true, id: order.id, amount: order.amount, currency: order.currency });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Order creation failed' });
   }
 });
 
 // Verify payment signature
-router.post("/verify", async(req, res) => {
-  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+router.post('/verify', async (req, res) => {
+  const {
+    razorpay_order_id,
+    razorpay_payment_id,
+    razorpay_signature,
+    donorDetails,
+    amount // optional: rupee value
+  } = req.body;
 
-  const sign = razorpay_order_id + "|" + razorpay_payment_id;
-  const expectedSignature = crypto
-    .createHmac("sha256", process.env.RAZORPAY_SECRET)
-    .update(sign)
-    .digest("hex");
+  const sign = razorpay_order_id + '|' + razorpay_payment_id;
+  const expectedSignature = crypto.createHmac('sha256', process.env.RAZORPAY_SECRET)
+                                  .update(sign)
+                                  .digest('hex');
 
-   if (expectedSignature !== razorpay_signature) {
-    return res.status(400).json({ success: false, message: "Invalid signature" });
+  if (expectedSignature !== razorpay_signature) {
+    return res.status(400).json({ success: false, message: 'Invalid signature' });
   }
 
 
   try {
-    // Fetch payment details from Razorpay
+    // fetch full payment details from Razorpay
     const payment = await razorpay.payments.fetch(razorpay_payment_id);
 
-    return res.status(200).json({
-      success: true,
-      message: "Payment verified",
-      paymentDetails: {
-        id: payment.id,
-        method: payment.method, // upi, card, netbanking, wallet
-        vpa: payment.vpa || null, // for UPI
-        bank: payment.bank || null, // for netbanking
-        wallet: payment.wallet || null, // for wallet
-        email: payment.email,
-        contact: payment.contact,
-        created_at: payment.created_at,
-        amount: payment.amount,
-        currency: payment.currency,
-      }
+    const donationDoc = new Donation({
+      ...donorDetails,
+      amount: donorDetails.amount ? Number(donorDetails.amount) : (amount ? amount/100 : 0),
+      paymentId: razorpay_payment_id,
+      orderId: razorpay_order_id,
+      signature: razorpay_signature,
+      status: payment.status,
+      paymentDetails: payment
     });
-  } catch (error) {
-    console.error("Error fetching payment details:", error);
-    return res.status(500).json({ success: false, message: "Failed to fetch payment details" });
-  }
 
+    const saved = await donationDoc.save();
+
+    res.json({ success: true, donation: saved });
+  } catch (err) {
+    console.error('verify error', err);
+    res.status(500).json({ success: false, message: 'Verification failed' });
+  }
 });
 
 module.exports = router;
+
