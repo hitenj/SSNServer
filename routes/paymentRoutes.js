@@ -33,7 +33,7 @@ router.post("/create-order", async (req, res) => {
 });
 
 // Verify payment signature
-router.post("/verify", (req, res) => {
+router.post("/verify", async(req, res) => {
   const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
   const sign = razorpay_order_id + "|" + razorpay_payment_id;
@@ -42,11 +42,36 @@ router.post("/verify", (req, res) => {
     .update(sign)
     .digest("hex");
 
-  if (expectedSignature === razorpay_signature) {
-    return res.status(200).json({ success: true, message: "Payment verified" });
-  } else {
+   if (expectedSignature !== razorpay_signature) {
     return res.status(400).json({ success: false, message: "Invalid signature" });
   }
+
+
+  try {
+    // Fetch payment details from Razorpay
+    const payment = await razorpay.payments.fetch(razorpay_payment_id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Payment verified",
+      paymentDetails: {
+        id: payment.id,
+        method: payment.method, // upi, card, netbanking, wallet
+        vpa: payment.vpa || null, // for UPI
+        bank: payment.bank || null, // for netbanking
+        wallet: payment.wallet || null, // for wallet
+        email: payment.email,
+        contact: payment.contact,
+        created_at: payment.created_at,
+        amount: payment.amount,
+        currency: payment.currency,
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching payment details:", error);
+    return res.status(500).json({ success: false, message: "Failed to fetch payment details" });
+  }
+
 });
 
 module.exports = router;

@@ -7,8 +7,8 @@ const complaintRoutes = require("./routes/complaintRoutes");
 const footerQuestionRoutes = require("./routes/footerQuestionRoutes");
 const registerCampaignRoutes = require("./routes/registerCampaignRoutes");
 const bookSeatRoutes = require("./routes/bookSeatRoutes");
-const donationRoutes = require("./routes/donationRoutes.js");
-const paymentRoutes = require("./routes/payment");
+const donationRoutes = require("./routes/donationRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
 
 const app = express();
 
