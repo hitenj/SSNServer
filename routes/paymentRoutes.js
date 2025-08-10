@@ -21,37 +21,49 @@ router.post("/create-order", async (req, res) => {
       payment_capture: 1,
     });
 
-    res.json({ success: true, id: order.id, amount: order.amount, currency: order.currency });
+    res.json({
+      success: true,
+      orderId: order.id,
+      amount: order.amount,
+      currency: order.currency,
+      rawOrder: order,
+    });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'Order creation failed' });
+    console.error("Create order error:", err);
+    res.status(500).json({ success: false, message: "Order creation failed" });
   }
 });
 
 // Verify payment signature
-router.post('/verify', async (req, res) => {
+router.post("/verify", async (req, res) => {
   const {
     razorpay_order_id,
     razorpay_payment_id,
     razorpay_signature,
-    donorDetails
+    donorDetails,
   } = req.body;
 
-  const sign = razorpay_order_id + '|' + razorpay_payment_id;
-  const expectedSignature = crypto.createHmac('sha256', process.env.RAZORPAY_SECRET)
-                                  .update(sign)
-                                  .digest('hex');
+  console.log("Verify request payload:", {
+    razorpay_order_id,
+    razorpay_payment_id,
+    razorpay_signature,
+  });
+
+  const sign = razorpay_order_id + "|" + razorpay_payment_id;
+  const expectedSignature = crypto
+    .createHmac("sha256", process.env.RAZORPAY_SECRET)
+    .update(sign)
+    .digest("hex");
+
+  console.log("expectedSignature:", expectedSignature);
+  console.log("incoming signature:", razorpay_signature);
 
   if (expectedSignature !== razorpay_signature) {
-    return res.status(400).json({ success: false, message: 'Invalid signature' });
+    console.error("Signature mismatch");
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid signature" });
   }
-
-  console.log("Verify request:", {
-  razorpay_order_id,
-  razorpay_payment_id,
-  razorpay_signature
-});
-
 
   try {
     // fetch full payment details from Razorpay
@@ -59,22 +71,25 @@ router.post('/verify', async (req, res) => {
 
     const donationDoc = new Donation({
       ...donorDetails,
-      amount: donorDetails.amount ? Number(donorDetails.amount) : (amount ? amount/100 : 0),
+      amount: donorDetails.amount
+        ? Number(donorDetails.amount)
+        : amount
+        ? amount / 100
+        : 0,
       paymentId: razorpay_payment_id,
       orderId: razorpay_order_id,
       signature: razorpay_signature,
       status: payment.status,
-      paymentDetails: payment
+      paymentDetails: payment,
     });
 
     const saved = await donationDoc.save();
 
     res.json({ success: true, donation: saved });
   } catch (err) {
-    console.error('verify error', err);
-    res.status(500).json({ success: false, message: 'Verification failed' });
+    console.error("verify error", err);
+    res.status(500).json({ success: false, message: "Verification failed" });
   }
 });
 
 module.exports = router;
-
