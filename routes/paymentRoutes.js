@@ -80,7 +80,16 @@ router.post("/verify", async (req, res) => {
       orderId: razorpay_order_id,
       signature: razorpay_signature,
       status: payment.status,
-      paymentDetails: payment,
+      ppaymentDetails: {
+        method: payment.method,
+        vpa: payment.vpa,
+        bank: payment.bank,
+        wallet: payment.wallet,
+        card: payment.card,
+        email: payment.email,
+        contact: payment.contact,
+        captured_at: payment.captured_at,
+      },
     });
 
     const saved = await donationDoc.save();
