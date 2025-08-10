@@ -23,7 +23,7 @@ const donationSchema = new mongoose.Schema({
     },
     email: String,
     contact: String,
-    captured_at: Date
+    created_at: Date
   }
 }, { timestamps: true });
 
