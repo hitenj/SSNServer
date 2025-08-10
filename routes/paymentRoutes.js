@@ -34,8 +34,7 @@ router.post('/verify', async (req, res) => {
     razorpay_order_id,
     razorpay_payment_id,
     razorpay_signature,
-    donorDetails,
-    amount // optional: rupee value
+    donorDetails
   } = req.body;
 
   const sign = razorpay_order_id + '|' + razorpay_payment_id;
@@ -46,6 +45,12 @@ router.post('/verify', async (req, res) => {
   if (expectedSignature !== razorpay_signature) {
     return res.status(400).json({ success: false, message: 'Invalid signature' });
   }
+
+  console.log("Verify request:", {
+  razorpay_order_id,
+  razorpay_payment_id,
+  razorpay_signature
+});
 
 
   try {
