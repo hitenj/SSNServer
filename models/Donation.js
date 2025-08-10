@@ -1,29 +1,31 @@
 const mongoose = require('mongoose');
 
 const donationSchema = new mongoose.Schema({
-    name: {type: String, required: true},
-    city: {type: String, required: true},
-    whatsapp: {type: String, required: true},
-    amount: {type: Number, required: true},
-    pan: {type: String},
-    purpose: {type: String, required: true},
-    paymentId: {type: String},
-    orderId: {type: String},
-    signature: {type: String},
-    status: { type: String, default: 'success' },
-    paymentDetails: {
-    method: String, // 'upi', 'card', 'netbanking', etc.
-    vpa: String,    // for UPI
-    bank: String,   // for netbanking
-    wallet: String, // for wallets like Paytm
+  name: { type: String, required: true },
+  city: { type: String, required: true },
+  whatsapp: { type: String, required: true },
+  amount: { type: Number, required: true },
+  pan: { type: String },
+  purpose: { type: String, required: true },
+  paymentId: { type: String },
+  orderId: { type: String },
+  signature: { type: String },
+  status: { type: String, default: 'success' },
+  paymentDetails: {
+    method: { type: String },
+    vpa: { type: String },
+    bank: { type: String },
+    wallet: { type: String },
     card: {
-      last4: String,
-      network: String,
-      type: String
+      type: new mongoose.Schema({
+        last4: { type: String },
+        network: { type: String },
+        type: { type: String }
+      }, { _id: false })
     },
-    email: String,
-    contact: String,
-    created_at: Date
+    email: { type: String },
+    contact: { type: String },
+    created_at: { type: Date }
   }
 }, { timestamps: true });
 
