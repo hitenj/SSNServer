@@ -69,27 +69,33 @@ router.post("/verify", async (req, res) => {
     // fetch full payment details from Razorpay
     const payment = await razorpay.payments.fetch(razorpay_payment_id);
 
+    const paymentDetailsMapped = {
+      method: payment.method || "",
+      vpa: payment.vpa || "",
+      bank: payment.bank || "",
+      wallet: payment.wallet || "",
+      card: payment.card
+        ? {
+            last4: payment.card.last4 || "",
+            network: payment.card.network || "",
+            type: payment.card.type || "",
+          }
+        : {},
+      email: payment.email || "",
+      contact: payment.contact || "",
+      created_at: payment.created_at
+        ? new Date(payment.created_at * 1000)
+        : new Date(),
+    };
+
     const donationDoc = new Donation({
       ...donorDetails,
-      amount: donorDetails.amount
-        ? Number(donorDetails.amount)
-        : amount
-        ? amount / 100
-        : 0,
+      amount: Number(donorDetails.amount) || 0,
       paymentId: razorpay_payment_id,
       orderId: razorpay_order_id,
       signature: razorpay_signature,
       status: payment.status,
-      ppaymentDetails: {
-        method: payment.method,
-        vpa: payment.vpa,
-        bank: payment.bank,
-        wallet: payment.wallet,
-        card: payment.card,
-        email: payment.email,
-        contact: payment.contact,
-        captured_at: payment.captured_at,
-      },
+      paymentDetails: paymentDetailsMapped,
     });
 
     const saved = await donationDoc.save();
