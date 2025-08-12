@@ -28,16 +28,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.get("/:id", async (req, res) => {
-  try {
-    const doc = await Donation.findById(req.params.id).lean();
-    if (!doc) return res.status(404).json({ message: 'Not found' });
-    res.json(doc);
-  } catch (err) {
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
 router.get("/totals", async (req, res) => {
   try {
     const totalsArr = await Donation.aggregate([
@@ -62,6 +52,18 @@ router.get("/totals", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch totals" });
   }
 });
+
+router.get("/:id", async (req, res) => {
+  try {
+    const doc = await Donation.findById(req.params.id).lean();
+    if (!doc) return res.status(404).json({ message: 'Not found' });
+    res.json(doc);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
 
 module.exports = router;
 
