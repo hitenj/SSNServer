@@ -40,19 +40,19 @@ router.get("/:id", async (req, res) => {
 
 router.get("/totals", async (req, res) => {
   try {
-    const totals = await Donation.aggregate([
-      { $match: { status: "captured" } }, // only successful donations
+    const totalsArr = await Donation.aggregate([
+      { $match: { status: { $in: ["captured", "success"] } } },
       {
         $group: {
-          _id: "$purpose",
+          _id: { $trim: { input: { $toLower: "$purpose" } } },
           totalRaised: { $sum: "$amount" }
         }
       }
     ]);
 
-    // Convert array to object for easier lookup in frontend
+    // Convert to object { "corpus - plantation": 101, ... }
     const result = {};
-    totals.forEach(t => {
+    totalsArr.forEach((t) => {
       result[t._id] = t.totalRaised;
     });
 
