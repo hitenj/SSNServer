@@ -38,17 +38,28 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-router.get("/totals/by-purpose", async (req, res) => {
+router.get("/totals", async (req, res) => {
   try {
     const totals = await Donation.aggregate([
-      { $match: { status: "captured" } }, // only captured donations
-      { $group: { _id: "$purpose", totalRaised: { $sum: "$amount" } } }
+      { $match: { status: "captured" } }, // only successful donations
+      {
+        $group: {
+          _id: "$purpose",
+          totalRaised: { $sum: "$amount" }
+        }
+      }
     ]);
 
-    res.json(totals);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error" });
+    // Convert array to object for easier lookup in frontend
+    const result = {};
+    totals.forEach(t => {
+      result[t._id] = t.totalRaised;
+    });
+
+    res.json(result);
+  } catch (error) {
+    console.error("Error fetching totals:", error);
+    res.status(500).json({ error: "Failed to fetch totals" });
   }
 });
 
