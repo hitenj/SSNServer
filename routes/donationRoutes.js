@@ -38,5 +38,35 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+router.get("/totals/by-purpose", async (req, res) => {
+  try {
+    const totals = await Donation.aggregate([
+      { 
+        $match: { 
+          status: { $in: ["success", "captured"] } // ✅ Count both success & captured
+        } 
+      },
+      {
+        $group: {
+          _id: "$purpose",
+          totalRaised: { $sum: "$amount" }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          purpose: "$_id",
+          totalRaised: 1
+        }
+      }
+    ]);
+
+    res.status(200).json(totals);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error fetching totals" });
+  }
+});
+
 module.exports = router;
 
