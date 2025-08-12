@@ -11,6 +11,7 @@ const donationSchema = new mongoose.Schema({
   orderId: { type: String },
   signature: { type: String },
   status: { type: String, default: 'success' },
+  receiptNumber: { type: String, unique: true },
   paymentDetails: {
     method: { type: String },
     vpa: { type: String },

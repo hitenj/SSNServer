@@ -3,6 +3,7 @@ const Razorpay = require("razorpay");
 const crypto = require("crypto");
 const router = express.Router();
 const Donation = require("../models/Donation");
+const generateReceiptNumber = require('../utils/generateReceiptNumber');
 
 // Razorpay instance (uses live keys from .env)
 const razorpay = new Razorpay({
@@ -69,6 +70,8 @@ router.post("/verify", async (req, res) => {
     // fetch full payment details from Razorpay
     const payment = await razorpay.payments.fetch(razorpay_payment_id);
 
+    const receiptNumber = await generateReceiptNumber();
+
     const paymentDetailsMapped = {
       method: payment.method || "",
       vpa: payment.vpa || "",
@@ -91,6 +94,7 @@ router.post("/verify", async (req, res) => {
     const donationDoc = new Donation({
       ...donorDetails,
       amount: Number(donorDetails.amount) || 0,
+      receiptNumber,
       paymentId: razorpay_payment_id,
       orderId: razorpay_order_id,
       signature: razorpay_signature,
