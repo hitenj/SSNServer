@@ -10,7 +10,10 @@ async function generateReceiptNumber() {
 
   const counterDoc = await Counter.findOneAndUpdate(
   { key },
-  { $inc: { seq: 1 }, $setOnInsert: { seq: 250 } }, // start at 250, next is 251
+  { 
+    $inc: { seq: 1 }, 
+    $setOnInsert: { seq: 250 } // This will be used only on first insert
+  },
   { new: true, upsert: true }
 );
 
