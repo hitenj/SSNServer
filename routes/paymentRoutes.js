@@ -100,13 +100,11 @@ router.post("/verify", async (req, res) => {
 
     const saved = await donationDoc.save();
 
-    // Desktop (handler) → return JSON
-    if (req.body.fromDesktop) {
+    if (req.headers["content-type"]?.includes("application/json")) {
       return res.json({ success: true, donation: saved });
+    } else {
+      return res.redirect(`${process.env.FRONTEND_URL}/receipt/${saved._id}`);
     }
-
-    // Mobile (callback_url) → redirect
-    return res.redirect(`${process.env.FRONTEND_URL}/receipt/${saved._id}`);
   } catch (err) {
     console.error("verify error", err);
     return res
